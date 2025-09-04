@@ -56,7 +56,7 @@ XRide Backend API
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/xride/xride_backend.git
+   git clone https://github.com/official-gabito/XRide_backend.git
    cd xride-backend
    ```
 
@@ -232,7 +232,7 @@ xride-backend/
 
 1. **Repository Setup**
    ```bash
-   git remote add origin https://github.com/your-username/xride-backend.git
+   git remote add origin https://github.com/official-gabito/XRide_backend.git
    git push -u origin main
    ```
 
@@ -251,8 +251,7 @@ xride-backend/
    DB_PASS=your-production-db-password
    DB_NAME=xride_production
    FIREBASE_CREDENTIALS=your-minified-firebase-json
-   API_URL=https://your-app.onrender.com
-   ALLOWED_ORIGINS=https://xride.app
+   API_URL=https://xride-backend.onrender.com
    ```
 
 ### 🐳 Docker Support
@@ -278,9 +277,7 @@ npm run dev        # Start development server with auto-reload
 npm test           # Run test suite (coming soon)
 npm run lint       # Run ESLint code analysis
 npm run format     # Format code with Prettier
-npm run docker:build  # Build Docker image
-npm run docker:run    # Run Docker container
-```
+
 
 ### 🔧 Local Development Setup
 
@@ -320,33 +317,10 @@ We welcome contributions to XRide Backend API!
 - **Conventional Commits** for commit messages
 - **Jest** for testing (setup included)
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team
-
-**XRide Development Team**
-- **Lead Developer**: lead@xride.app
-- **API Support**: api-support@xride.app
-- **General Inquiries**: dev@xride.app
-
-## 🆘 Support
-
 ### 📚 Resources
 - **API Documentation**: `/api-docs` endpoint
 - **Health Status**: `/health` endpoint  
 - **Test Connectivity**: `/api/test` endpoint
-
-### 🐛 Issue Reporting
-- **GitHub Issues**: [Report a bug](https://github.com/xride/xride-backend/issues)
-- **Email Support**: api-support@xride.app
-
-### 💬 Community
-- **Website**: [https://xride.app](https://xride.app)
-- **Documentation**: Available at API docs endpoint
-- **Status Page**: Monitor service health
-
 ---
 
 <div align="center">

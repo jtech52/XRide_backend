@@ -42,7 +42,7 @@ const swaggerOptions = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production' 
-          ? `https://your-app-name.onrender.com`
+          ? `https://xride-backend.onrender.com`
           : `http://localhost:${PORT}`,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },

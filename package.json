@@ -33,7 +33,7 @@
   },
 
 
-  "homepage": "https://github.com/xride/xride-backend#readme",
+  "homepage": "https://github.com/official-gabito/XRide_backend#readme",
   "dependencies": {
     "express": "^4.18.2",
     "mysql2": "^3.6.5",
