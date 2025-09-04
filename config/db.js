@@ -5,14 +5,16 @@ let pool;
 // Database configuration
 const dbConfig = {
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
+  // mysql2 expects connectTimeout (ms) for connection timeouts. Remove invalid options
+  // `acquireTimeout` and `timeout` cause warnings and may become errors in future versions.
+  connectTimeout: 60000,
   multipleStatements: false,
   timezone: "+00:00",
 };

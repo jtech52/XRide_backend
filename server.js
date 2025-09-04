@@ -323,10 +323,25 @@ async function initializeServices() {
     console.log('✅ Firebase Admin SDK initialized');
     
     // Initialize database
-    const { initializeDatabase } = require('./config/db');
-    await initializeDatabase();
-    console.log('✅ MySQL database connected');
-    
+    const db = require('./config/db');
+
+    try {
+      await db.initializeDatabase();
+      // perform a lightweight connectivity check
+      try {
+        const conn = await db.getConnection();
+        await conn.execute('SELECT 1');
+        conn.release();
+        console.log('✅ MySQL database connected and reachable');
+      } catch (dbTestErr) {
+        console.error('❌ MySQL connected but test query failed:', dbTestErr.message || dbTestErr);
+        return false;
+      }
+    } catch (dbInitErr) {
+      console.error('❌ MySQL database initialization failed:', dbInitErr.message || dbInitErr);
+      return false;
+    }
+
     return true;
   } catch (error) {
     console.error('❌ Service initialization failed:', error.message);
