@@ -8,6 +8,16 @@ const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Determine public base URL for logs and swagger
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? (
+      process.env.PUBLIC_URL ||
+      process.env.BASE_URL ||
+      process.env.RENDER_EXTERNAL_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      'https://xride-backend.onrender.com'
+    )
+  : `http://localhost:${PORT}`;
 
 // Basic rate limiter
 const limiter = rateLimit({
@@ -41,9 +51,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.NODE_ENV === 'production' 
-          ? `https://xride-backend.onrender.com`
-          : `http://localhost:${PORT}`,
+        url: BASE_URL,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
     ],
@@ -362,9 +370,21 @@ async function startServer() {
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 XRide Backend Server running on port ${PORT}`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-      console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
-      console.log(`🧪 Test Endpoint: http://localhost:${PORT}/api/test`);
+      try {
+        const docsUrl = new URL('/api-docs', BASE_URL).toString();
+        const healthUrl = new URL('/health', BASE_URL).toString();
+        const testUrl = new URL('/api/test', BASE_URL).toString();
+
+        console.log(`📚 API Documentation: ${docsUrl}`);
+        console.log(`🏥 Health Check: ${healthUrl}`);
+        console.log(`🧪 Test Endpoint: ${testUrl}`);
+      } catch (e) {
+        // Fallbacks if BASE_URL is not a full URL
+        console.log(`📚 API Documentation: ${BASE_URL.replace(/\/$/, '')}/api-docs`);
+        console.log(`🏥 Health Check: ${BASE_URL.replace(/\/$/, '')}/health`);
+        console.log(`🧪 Test Endpoint: ${BASE_URL.replace(/\/$/, '')}/api/test`);
+      }
+
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`⚡ XRide Backend v1.0.0 - Ready for requests!`);
     });
