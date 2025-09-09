@@ -65,6 +65,8 @@ router.use(checkAuth);
 router.post(
   "/",
   asyncHandler(async (req, res) => {
+    console.log(`🚛 [ORDER CREATE] User ${req.user.uid} attempting to create new order`);
+    
     const {
       pickupAddress,
       dropoffAddress,
@@ -75,6 +77,11 @@ router.post(
       amount,
       orderType,
     } = req.body;
+
+    console.log(`   📍 Pickup: ${pickupAddress} (${latPickup}, ${lngPickup})`);
+    console.log(`   📍 Dropoff: ${dropoffAddress} (${latDropoff}, ${lngDropoff})`);
+    console.log(`   💰 Amount: $${amount}`);
+    console.log(`   📦 Order Type: ${orderType}`);
 
     // Validation
     const requiredFields = [
@@ -93,6 +100,7 @@ router.post(
     );
 
     if (missingFields.length > 0) {
+      console.log(`   ❌ Validation failed - Missing fields: ${missingFields.join(", ")}`);
       throw createError(
         `Missing required fields: ${missingFields.join(", ")}`,
         400
@@ -101,6 +109,7 @@ router.post(
 
     // Validate coordinates
     if (latPickup < -90 || latPickup > 90) {
+      console.log(`   ❌ Invalid pickup latitude: ${latPickup}`);
       throw createError(
         "Invalid pickup latitude. Must be between -90 and 90",
         400
@@ -108,6 +117,7 @@ router.post(
     }
 
     if (lngPickup < -180 || lngPickup > 180) {
+      console.log(`   ❌ Invalid pickup longitude: ${lngPickup}`);
       throw createError(
         "Invalid pickup longitude. Must be between -180 and 180",
         400
@@ -115,6 +125,7 @@ router.post(
     }
 
     if (latDropoff < -90 || latDropoff > 90) {
+      console.log(`   ❌ Invalid dropoff latitude: ${latDropoff}`);
       throw createError(
         "Invalid dropoff latitude. Must be between -90 and 90",
         400
@@ -122,6 +133,7 @@ router.post(
     }
 
     if (lngDropoff < -180 || lngDropoff > 180) {
+      console.log(`   ❌ Invalid dropoff longitude: ${lngDropoff}`);
       throw createError(
         "Invalid dropoff longitude. Must be between -180 and 180",
         400
@@ -130,20 +142,25 @@ router.post(
 
     // Validate amount
     if (typeof amount !== "number" || amount <= 0) {
+      console.log(`   ❌ Invalid amount: ${amount}`);
       throw createError("Amount must be a positive number", 400);
     }
 
     // Validate orderType
     const validOrderTypes = ["delivery", "pickup", "express", "scheduled"];
     if (!validOrderTypes.includes(orderType.toLowerCase())) {
+      console.log(`   ❌ Invalid order type: ${orderType}`);
       throw createError(
         `Invalid order type. Must be one of: ${validOrderTypes.join(", ")}`,
         400
       );
     }
 
+    console.log(`   ✅ Validation passed for user ${req.user.uid}`);
+
     try {
       // Insert order into database
+      console.log(`   💾 Inserting order into database for user ${req.user.uid}...`);
       const insertQuery = `
       INSERT INTO orders (
         userUid, pickupAddress, dropoffAddress, 
@@ -164,9 +181,14 @@ router.post(
         orderType.toLowerCase(),
       ]);
 
+      console.log(`   ✅ Order created with ID: ${result.insertId}`);
+
       // Fetch the created order
+      console.log(`   📋 Fetching created order details...`);
       const selectQuery = "SELECT * FROM orders WHERE orderId = ?";
       const [order] = await executeQuery(selectQuery, [result.insertId]);
+
+      console.log(`   🎉 Order creation successful for user ${req.user.uid}, Order ID: ${result.insertId}`);
 
       res.status(201).json({
         message: "Order created successfully",
@@ -178,6 +200,7 @@ router.post(
       });
     } catch (error) {
       console.error("❌ Error creating order:", error.message);
+      console.error("   Stack trace:", error.stack);
       throw createError("Failed to create order. Please try again.", 500);
     }
   })
@@ -265,11 +288,17 @@ router.post(
 router.get(
   "/",
   asyncHandler(async (req, res) => {
+    console.log(`📋 [ORDER LIST] User ${req.user.uid} requesting orders list`);
+    
     const { status, limit = 20, offset = 0, orderType } = req.query;
+
+    console.log(`   📊 Query params - Status: ${status || 'all'}, Limit: ${limit}, Offset: ${offset}, Type: ${orderType || 'all'}`);
 
     // Validate pagination parameters
     const parsedLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
     const parsedOffset = Math.max(parseInt(offset) || 0, 0);
+
+    console.log(`   📏 Parsed pagination - Limit: ${parsedLimit}, Offset: ${parsedOffset}`);
 
     try {
       // Build query conditions
@@ -277,6 +306,7 @@ router.get(
       let queryParams = [req.user.uid];
 
       if (status) {
+        console.log(`   🔍 Filtering by status: ${status}`);
         const validStatuses = [
           "pending",
           "confirmed",
@@ -285,6 +315,7 @@ router.get(
           "cancelled",
         ];
         if (!validStatuses.includes(status)) {
+          console.log(`   ❌ Invalid status filter: ${status}`);
           throw createError(
             `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
             400
@@ -295,6 +326,7 @@ router.get(
       }
 
       if (orderType) {
+        console.log(`   🔍 Filtering by order type: ${orderType}`);
         whereConditions.push("orderType = ?");
         queryParams.push(orderType.toLowerCase());
       }
@@ -302,11 +334,15 @@ router.get(
       const whereClause = whereConditions.join(" AND ");
 
       // Get total count
+      console.log(`   🔢 Getting total count for user ${req.user.uid}...`);
       const countQuery = `SELECT COUNT(*) as total FROM orders WHERE ${whereClause}`;
       const [countResult] = await executeQuery(countQuery, queryParams);
       const total = countResult.total;
+      
+      console.log(`   📊 Found ${total} total orders for user`);
 
       // Get orders with pagination
+      console.log(`   📋 Fetching orders with pagination...`);
       const selectQuery = `
       SELECT * FROM orders 
       WHERE ${whereClause}
@@ -327,6 +363,9 @@ router.get(
         updatedAt: order.updatedAt.toISOString(),
       }));
 
+      console.log(`   ✅ Successfully retrieved ${formattedOrders.length} orders for user ${req.user.uid}`);
+      console.log(`   📈 Pagination: ${parsedOffset}-${parsedOffset + formattedOrders.length} of ${total}`);
+
       res.json({
         message: "Orders retrieved successfully",
         orders: formattedOrders,
@@ -339,6 +378,7 @@ router.get(
       });
     } catch (error) {
       console.error("❌ Error fetching orders:", error.message);
+      console.error("   Stack trace:", error.stack);
       if (error.status) throw error;
       throw createError("Failed to retrieve orders. Please try again.", 500);
     }
@@ -392,22 +432,32 @@ router.get(
   asyncHandler(async (req, res) => {
     const { orderId } = req.params;
 
+    console.log(`🔍 [ORDER DETAILS] User ${req.user.uid} requesting order ${orderId}`);
+
     // Validate orderId
     if (!orderId || isNaN(parseInt(orderId))) {
+      console.log(`   ❌ Invalid order ID provided: ${orderId}`);
       throw createError("Invalid order ID", 400);
     }
+
+    const parsedOrderId = parseInt(orderId);
+    console.log(`   🔎 Searching for order ID: ${parsedOrderId}`);
 
     try {
       const selectQuery =
         "SELECT * FROM orders WHERE orderId = ? AND userUid = ?";
       const [order] = await executeQuery(selectQuery, [
-        parseInt(orderId),
+        parsedOrderId,
         req.user.uid,
       ]);
 
       if (!order) {
+        console.log(`   ❌ Order ${parsedOrderId} not found for user ${req.user.uid}`);
         throw createError("Order not found", 404);
       }
+
+      console.log(`   ✅ Found order ${parsedOrderId} - Status: ${order.status}, Amount: $${order.amount}`);
+      console.log(`   📍 Route: ${order.pickupAddress} → ${order.dropoffAddress}`);
 
       res.json({
         message: "Order retrieved successfully",
@@ -419,6 +469,7 @@ router.get(
       });
     } catch (error) {
       console.error("❌ Error fetching order:", error.message);
+      console.error("   Stack trace:", error.stack);
       if (error.status) throw error;
       throw createError("Failed to retrieve order. Please try again.", 500);
     }

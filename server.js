@@ -291,6 +291,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
  *                   example: 2023-12-01T10:30:00.000Z
  */
 app.get('/health', (req, res) => {
+  console.log('🏥 Health check requested');
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -396,6 +397,7 @@ async function initializeServices() {
 
 // API routes (loaded after services are initialized)
 app.get('/api/test', (req, res) => {
+  console.log('🧪 Test endpoint requested');
   res.json({
     message: 'API is working!',
     timestamp: new Date().toISOString(),
@@ -429,7 +431,11 @@ async function startServer() {
     
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n🎉 ===============================================`);
       console.log(`🚀 XRide Backend Server running on port ${PORT}`);
+      console.log(`📊 COMPREHENSIVE LOGGING ENABLED - All actions will be logged`);
+      console.log(`===============================================\n`);
+      
       try {
         const docsUrl = new URL('/api-docs', BASE_URL).toString();
         const healthUrl = new URL('/health', BASE_URL).toString();
@@ -447,6 +453,8 @@ async function startServer() {
 
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`⚡ XRide Backend v1.0.0 - Ready for requests!`);
+      console.log(`📝 Logging includes: Requests, Responses, Auth, Database, Errors`);
+      console.log(`===============================================\n`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

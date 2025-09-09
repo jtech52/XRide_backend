@@ -89,13 +89,25 @@ const getConnection = async () => {
 
 // Execute query with error handling
 const executeQuery = async (query, params = []) => {
+  console.log(`💾 [DATABASE] Executing query: ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`);
+  console.log(`   📋 Parameters: ${JSON.stringify(params)}`);
+  
   let connection;
   try {
+    const startTime = Date.now();
     connection = await getConnection();
     const [results] = await connection.execute(query, params);
+    const duration = Date.now() - startTime;
+    
+    console.log(`   ✅ Query executed successfully in ${duration}ms`);
+    console.log(`   📊 Results: ${Array.isArray(results) ? results.length + ' rows' : 'affected rows: ' + (results.affectedRows || 0)}`);
+    
     return results;
   } catch (error) {
     console.error("❌ Database query error:", error.message);
+    console.error("   Query:", query);
+    console.error("   Parameters:", params);
+    console.error("   Stack trace:", error.stack);
     throw error;
   } finally {
     if (connection) {
