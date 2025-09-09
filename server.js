@@ -44,6 +44,47 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Request logging middleware - logs all incoming requests
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const method = req.method;
+  const url = req.originalUrl;
+  const ip = req.ip || req.connection.remoteAddress;
+  const userAgent = req.get('User-Agent');
+  
+  console.log(`\n📥 [${timestamp}] ${method} ${url}`);
+  console.log(`   IP: ${ip}`);
+  console.log(`   User-Agent: ${userAgent}`);
+  
+  if (Object.keys(req.query).length > 0) {
+    console.log(`   Query Params:`, req.query);
+  }
+  
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`   Body:`, JSON.stringify(req.body, null, 2));
+  }
+  
+  if (req.headers.authorization) {
+    console.log(`   🔐 Authorization Header Present`);
+  }
+  
+  // Log response
+  const originalSend = res.send;
+  res.send = function(data) {
+    console.log(`📤 [${new Date().toISOString()}] Response: ${res.statusCode} ${res.statusMessage}`);
+    if (res.statusCode >= 400) {
+      console.log(`   ❌ Error Response:`, data);
+    } else if (res.statusCode >= 200 && res.statusCode < 300) {
+      console.log(`   ✅ Success Response (${data ? JSON.stringify(data).length : 0} chars)`);
+    }
+    console.log(`   ⏱️  Response Time: ${Date.now() - req.startTime}ms\n`);
+    originalSend.call(this, data);
+  };
+  
+  req.startTime = Date.now();
+  next();
+});
+
 // Swagger configuration
 const swaggerOptions = {
   definition: {
