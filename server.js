@@ -33,7 +33,11 @@ const limiter = rateLimit({
 
 // Security middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 app.use(limiter);
 
 // Body parsing
